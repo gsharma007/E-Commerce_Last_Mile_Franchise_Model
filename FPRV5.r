@@ -1,3 +1,4 @@
+#Python code for setting up fields and taking the reports from api
 import datetime,os
 #import psycopg2
 #note that we have to import the Psycopg2 extras library!
@@ -6,13 +7,13 @@ import sys
 import urllib2
 import json
 os.chdir("/home/gaurav/Franchise_Performance_Reports/api_reports")
-datetime.datetime(2017,3,28).strftime('%s')
-x= datetime.datetime.today().strftime('%s')
-y = int(x)/(24*3600)
-sd = str((y-1)*24*3600)
-ed = str((y)*24*3600)
-cid_list=['IND560047AAB',"IND560062AAB","IND560022AAB","IND110018AAB"]
-report_list=['hod','cd','dispatch','pdd']
+datetime.datetime(2017,3,28).strftime('%s') 
+x= datetime.datetime.today().strftime('%s') #taking the today's time as x
+y = int(x)/(24*3600) #formulating a y by changing the format of x
+sd = str((y-1)*24*3600) # start date will the yesterday's date
+ed = str((y)*24*3600) # end date will be the today's date 00:00 am
+cid_list=['IND560047AAB',"IND560062AAB","IND560022AAB","IND110018AAB"] # center ids for the interested centers
+report_list=['hod','cd','dispatch','pdd']  #reports need to pulled out
 
 i =0
 j = 0
@@ -28,13 +29,15 @@ for i in range(len(report_list)):
         newfile.write(txt)
         newfile.close()
       
-setwd("/home/gaurav/Franchise_Performance_Reports")
+#R code part 1- for coverting the reports dowmloaded from a api as a clean input for further cleaning
+setwd("/home/gaurav/Franchise_Performance_Reports")  
 system(paste("cd",getwd()))
-system("python api_data_fetch.py")
-pdd <- read.csv("api_reports/pdd.csv",stringsAsFactors = F)
+system("python api_data_fetch.py") 
+pdd <- read.csv("api_reports/pdd.csv",stringsAsFactors = F) 
 dispatch <- read.csv("api_reports/dispatch.csv",stringsAsFactors = F)
 cd <- read.csv("api_reports/cd.csv",stringsAsFactors = F)
-hod <- read.csv("api_reports/hod.csv",stringsAsFactors = F)
+hod <- read.csv("api_reports/hod.csv",stringsAsFactors = F) #Setting the working directory and reading the reports downoaded from api
+
 library(dplyr)
 pdd <- pdd %>% filter(!Waybill %in% gsub("[.]"," ",names(pdd)), nchar(LastScanDate) > 0  ) %>% select(-LastScanDate) %>% unique()
 dispatch <- dispatch %>% filter(!Center %in% gsub("[.]"," ",names(dispatch)), nchar(LastScanDate) > 0) %>% select(-LastScanDate) %>% unique()
@@ -58,10 +61,10 @@ for(i in int_names){
 write.csv(hod,"handover.csv",row.names = F)
 write.csv(cd,"closure.csv",row.names = F)
 write.csv(pdd,"pending.csv",row.names = F)
-write.csv(dispatch,"dispatch.csv",row.names = F)
+write.csv(dispatch,"dispatch.csv",row.names = F) #changing the names of files to the generic name which was used initially for reports
 
     
-## In all reports franchise centers filter is there
+## R code part 2- In all reports franchise centers filter is there
 
 closure<-read.csv("closure.csv",stringsAsFactors = F)   ##fetching closure report from constellation dashboard
 handover<-read.csv("handover.csv",stringsAsFactors = F) ##fetching handover report from constelltion dashboard
@@ -101,8 +104,9 @@ handover_dispatch_closure_all <- handover_dispatch_closure_all %>% select(sd,cn,
 
 write.csv(handover_dispatch_closure_all,file="feb_franchise_performance.csv", row.names = F)
 
+#R Code Part 3- Getting the right count of pending shipments at the EOD and joining the output file with other numbers from constellation dashboard
 cns <- c("Bengaluru_KnktDFP_D (Karnataka)","Bengaluru_EjpraFNC_D (Karnataka)","Bengaluru_BKNgrDFP_D (Karnataka)","Delhi_VikasDFP_D (Delhi)")
-xx <- all_months_data %>% filter(sl %in% cns) %>% mutate(sdate = substring(sd,14,23))
+xx <- all_months_data %>% filter(sl %in% cns) %>% mutate(sdate = substring(sd,14,23)) #all_months_data csv file is downloaded already from the HQ MongoDB
 yy_last_scan_of_day <- xx %>% group_by(sdate,wbn,sl) %>% summarise(sd = max(sd)) %>% as.data.frame()
 xx_filtered <- xx %>% inner_join(yy_last_scan_of_day) %>% arrange(wbn,sd)
 xx_filtered<- xx_filtered %>% mutate(pending_or_not=ifelse(st %in% c("UD","PP") & ss %in% c("Pending","In Transit","Scheduled","Dispatched"),"Pending","Not Pending"))
@@ -117,7 +121,7 @@ d_convert <- function(xx){
   xx <- "2/10/2017"
   xx <- as.integer(unlist(strsplit(xx,"/")))
   return(as.character(format(as.Date(ISOdate(xx[3],xx[1],xx[2])),"%m/%d/%Y")))
-}
+} #function made for converting the format of the data into acceptable format
 
 
 handover_dispatch_closure_all <- handover_dispatch_closure_all %>% mutate(sd= as.character(d_convert(sd)))
