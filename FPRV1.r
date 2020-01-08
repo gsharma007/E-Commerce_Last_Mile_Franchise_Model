@@ -17,4 +17,3 @@ handover <- handover %>% mutate(Promise.Date = as.POSIXct(strptime(Promise.Date,
 handover$pdd<-substr(handover$Promise.Date,1,10)
 pdd_count<- handover %>% select(Waybill,pdd) %>% group_by(pdd) %>% summarise(num_pdd= length(Waybill)) %>% as.data.frame()
 pdd_breach<- handover %>% filter(pdd=="2017-03-09") %>% select(Waybill,DispatchCount) %>% group_by(DispatchCount) %>% summarise(breached_shipments=length(Waybill)) %>% as.data.frame()
-finalreport<- 
