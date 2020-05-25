@@ -30,5 +30,3 @@ handover_dispatch_closure_all <- closure_new %>% full_join(handover_dispatch_bot
 handover_dispatch_closure_all <- handover_dispatch_closure_all %>% select(sd,cn,cod_handover,pickup_handover,prepaid_handover,total_handover,pdd_count,on_date_breach,overall_breach,num_dispatch,shipments_dispatched,shipments_delivered,shipments_pending,shipments_returned,shipments_pickedup,shipments_scheduled,shipments_canceled,shipments_collected,shipments_closed1,shipments_closed2) %>% as.data.frame()
 
 write.csv(handover_dispatch_closure_all,file="feb_franchise_performance.csv", row.names = F)
-
-
