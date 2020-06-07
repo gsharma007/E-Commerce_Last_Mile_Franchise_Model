@@ -14,6 +14,6 @@ shipments_dispatched<- dispatch %>% summarise(total_dispatched=sum(as.numeric(To
 Shipments_delivered<- dispatch %>% summarise(total_delivered=sum(Delivered,Pickedup))
 shipments_closed<- dispatch %>% summarise(total_closed=sum(Delivered,Pickedup,Returned,Collected))
 handover <- handover %>% mutate(Promise.Date = as.POSIXct(strptime(Promise.Date,"%Y/%m/%d %H:%M:%S")))
-handover$pdd<-substr(handover$Promise.Date,1,10)
+handover$pdd<-substr(handover$Promise.Date,1,11)
 pdd_count<- handover %>% select(Waybill,pdd) %>% group_by(pdd) %>% summarise(num_pdd= length(Waybill)) %>% as.data.frame()
 pdd_breach<- handover %>% filter(pdd=="2017-03-09") %>% select(Waybill,DispatchCount) %>% group_by(DispatchCount) %>% summarise(breached_shipments=length(Waybill)) %>% as.data.frame()
